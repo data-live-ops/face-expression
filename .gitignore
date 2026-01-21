@@ -1,3 +1,5 @@
 node_modules
 
 *.sql
+.vercel
+.env*.local
