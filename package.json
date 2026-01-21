@@ -7,10 +7,17 @@
     "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["reflection", "collective", "face", "expression", "supabase"],
+  "keywords": [
+    "reflection",
+    "collective",
+    "face",
+    "expression",
+    "supabase"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "vercel": "^50.4.8"
   }
 }
