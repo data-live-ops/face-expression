@@ -457,8 +457,15 @@
         }
 
         @keyframes float {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-30px) rotate(180deg); }
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-30px) rotate(180deg);
+            }
         }
     </style>
 </head>
@@ -468,9 +475,12 @@
     <!-- INTRO OVERLAY -->
     <div id="intro-overlay">
         <div class="intro-bg-animation">
-            <div class="floating-circle" style="width: 300px; height: 300px; top: 10%; left: 5%; animation-delay: 0s;"></div>
-            <div class="floating-circle" style="width: 200px; height: 200px; top: 60%; left: 80%; animation-delay: -5s;"></div>
-            <div class="floating-circle" style="width: 150px; height: 150px; top: 80%; left: 20%; animation-delay: -10s;"></div>
+            <div class="floating-circle" style="width: 300px; height: 300px; top: 10%; left: 5%; animation-delay: 0s;">
+            </div>
+            <div class="floating-circle"
+                style="width: 200px; height: 200px; top: 60%; left: 80%; animation-delay: -5s;"></div>
+            <div class="floating-circle"
+                style="width: 150px; height: 150px; top: 80%; left: 20%; animation-delay: -10s;"></div>
         </div>
 
         <div class="intro-content">
@@ -504,7 +514,9 @@
                 <div class="qr-section">
                     <h3>Scan untuk Bergabung</h3>
                     <p>Buka kamera HP dan arahkan ke QR code</p>
-                    <div id="qr-code"></div>
+                    <div id="qr-code"><img
+                            src="https://uxyojsfbpvugnudbhwhb.supabase.co/storage/v1/object/public/cotime/Cermin%20Kehidupan_qrcode.png"
+                            alt="face-expression-qr-code" width="400"></div>
                     <p class="participant-url" id="participant-url">Loading...</p>
                 </div>
 
@@ -661,7 +673,7 @@
                 width: 200,
                 margin: 0,
                 color: { dark: '#000000', light: '#ffffff' }
-            }, function(error, canvas) {
+            }, function (error, canvas) {
                 if (!error) {
                     document.getElementById('qr-code').innerHTML = '';
                     document.getElementById('qr-code').appendChild(canvas);
