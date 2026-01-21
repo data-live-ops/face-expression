@@ -66,8 +66,15 @@
         }
 
         @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
         }
 
         .countdown-label {
@@ -216,8 +223,13 @@
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
         }
 
         .waiting-content h2 {
@@ -380,10 +392,12 @@
     <div class="container hidden" id="intro-screen">
         <div class="intro-content">
             <div class="intro-icon">🪞</div>
-            <h2>Cermin Jiwa Kolektif</h2>
+            <h2>Refleksi Kehidupan</h2>
             <p class="intro-subtitle">Refleksi Bersama untuk CoLearners</p>
             <div class="intro-divider"></div>
-            <p class="intro-description">Selamat datang di sesi refleksi kolektif. Melalui 10 pertanyaan, kita akan bersama-sama melukis wajah jiwa kolektif yang merepresentasikan kondisi pikiran dan hati kita semua.</p>
+            <p class="intro-description">Selamat datang di sesi refleksi kolektif. Melalui 10 pertanyaan, kita akan
+                bersama-sama melukis wajah jiwa kolektif yang merepresentasikan kondisi pikiran dan hati kita semua.
+            </p>
             <div class="loader"></div>
             <p class="intro-waiting">Menunggu host memulai sesi...</p>
         </div>
@@ -392,7 +406,8 @@
     <!-- Final Screen -->
     <div class="container hidden" id="final-screen">
         <h2>Sesi Selesai</h2>
-        <p>Terima kasih telah berpartisipasi dalam refleksi kolektif ini. Lihatlah ke layar utama untuk menyaksikan wajah jiwa kolektif kita.</p>
+        <p>Terima kasih telah berpartisipasi dalam refleksi kolektif ini. Lihatlah ke layar utama untuk menyaksikan
+            wajah jiwa kolektif kita.</p>
     </div>
 
     <div class="status" id="connection-status">Connecting...</div>
@@ -410,6 +425,7 @@
         let countdownInterval = null;
         let hasAnswered = false;
         let selectedMCValue = null;
+        let participantId = 'participant_' + Math.random().toString(36).substr(2, 9);
 
         const questions = [
             {
@@ -421,7 +437,7 @@
             },
             {
                 type: 'mc',
-                text: 'Jika batin Anda punya mata, ke mana ia sedang memandang saat ini?',
+                text: 'Jika batin kamu punya mata, ke mana ia sedang memandang saat ini?',
                 options: [
                     { label: 'A', text: 'Menatap kosong ke bawah (Hampa)', value: 0 },
                     { label: 'B', text: 'Menatap lurus ke depan (Waspada)', value: 50 },
@@ -431,14 +447,14 @@
             },
             {
                 type: 'slider',
-                text: 'Seberapa kusut benang pikiran di kepala Anda?',
+                text: 'Seberapa kusut benang pikiran di kepala kamu?',
                 labelLeft: 'Sangat Kusut/Tegang',
                 labelRight: 'Sangat Terurai/Rileks',
                 feature: 'Kerutan Dahi'
             },
             {
                 type: 'mc',
-                text: 'Bayangkan ada beban tak kasat mata di pundak Anda. Seberapa besar ukurannya?',
+                text: 'Bayangkan ada beban tak kasat mata di pundak kamu. Seberapa besar ukurannya?',
                 options: [
                     { label: 'A', text: 'Sebongkah batu besar (Menunduk)', value: 0 },
                     { label: 'B', text: 'Sekarung beras (Tegak tapi kaku)', value: 50 },
@@ -448,21 +464,21 @@
             },
             {
                 type: 'slider',
-                text: 'Adakah api kecil yang masih menyala di dalam dada Anda?',
+                text: 'Adakah api kecil yang masih menyala di dalam dada kamu?',
                 labelLeft: 'Nyaris Padam',
                 labelRight: 'Menyala Terang',
                 feature: 'Sorot Mata'
             },
             {
                 type: 'slider',
-                text: 'Seberapa jujur Anda telah berdamai dengan kelelahan diri sendiri?',
+                text: 'Seberapa jujur kamu telah berdamai dengan kelelahan diri sendiri?',
                 labelLeft: 'Masih Menyangkal',
                 labelRight: 'Sudah Menerima',
                 feature: 'Garis Waktu'
             },
             {
                 type: 'mc',
-                text: 'Jika diminta merespons hidup saat ini dengan satu ekspresi mulut, mana yang Anda pilih?',
+                text: 'Jika diminta merespons hidup saat ini dengan satu ekspresi mulut, mana yang kamu pilih?',
                 options: [
                     { label: 'A', text: 'Terkatup rapat menahan getir', value: 0 },
                     { label: 'B', text: 'Sedikit terbuka, menghela napas', value: 33 },
@@ -473,21 +489,21 @@
             },
             {
                 type: 'slider',
-                text: 'Seberapa keras Anda menggigit kenyataan pahit akhir-akhir ini?',
+                text: 'Seberapa keras kamu menggigit kenyataan pahit akhir-akhir ini?',
                 labelLeft: 'Sangat Keras',
                 labelRight: 'Lunak',
                 feature: 'Ketegangan Rahang'
             },
             {
                 type: 'slider',
-                text: 'Seberapa lega ruang di dada Anda untuk bernafas sekarang?',
+                text: 'Seberapa lega ruang di dada kamu untuk bernafas sekarang?',
                 labelLeft: 'Sesak/Dangkal',
                 labelRight: 'Lega/Dalam',
                 feature: 'Kedalaman Nafas'
             },
             {
                 type: 'mc',
-                text: 'Menatap hari esok, bagaimana posisi kepala Anda?',
+                text: 'Menatap hari esok, bagaimana posisi kepala kamu?',
                 options: [
                     { label: 'A', text: 'Tertunduk pasrah', value: 0 },
                     { label: 'B', text: 'Tegak waspada', value: 50 },
@@ -497,10 +513,56 @@
             }
         ];
 
+        // Register participant in database with heartbeat
+        async function registerParticipant() {
+            console.log('Registering participant:', participantId);
+
+            // Upsert participant record
+            const { data, error } = await supabaseClient
+                .from('participants')
+                .upsert({
+                    id: participantId,
+                    last_seen: new Date().toISOString()
+                })
+                .select();
+
+            if (error) {
+                console.error('Error registering participant:', error);
+                document.getElementById('connection-status').innerText = 'Error: ' + error.message;
+                document.getElementById('connection-status').style.color = '#e74c3c';
+            } else {
+                console.log('Participant registered successfully:', data);
+            }
+
+            // Heartbeat every 10 seconds to keep participant "alive"
+            setInterval(async () => {
+                const { error: heartbeatError } = await supabaseClient
+                    .from('participants')
+                    .upsert({
+                        id: participantId,
+                        last_seen: new Date().toISOString()
+                    });
+                if (heartbeatError) {
+                    console.error('Heartbeat error:', heartbeatError);
+                }
+            }, 10000);
+        }
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', async () => {
+            await supabaseClient
+                .from('participants')
+                .delete()
+                .eq('id', participantId);
+        });
+
         // Initialize
         async function init() {
             document.getElementById('connection-status').innerText = 'Connected';
             document.getElementById('connection-status').style.color = '#4ade80';
+
+            // Register participant in database
+            await registerParticipant();
 
             const { data, error } = await supabaseClient
                 .from('game_state')
@@ -716,15 +778,20 @@
             hasAnswered = true;
             updateUI();
 
-            const { error } = await supabaseClient
+            console.log('Submitting answer:', { question_index: currentQuestionIndex, value: value });
+
+            const { data, error } = await supabaseClient
                 .from('answers')
-                .insert([{ question_index: currentQuestionIndex, value: value }]);
+                .insert([{ question_index: currentQuestionIndex, value: value }])
+                .select();
 
             if (error) {
-                console.error('Error submitting:', error);
+                console.error('Error submitting answer:', error);
                 alert('Gagal mengirim jawaban. Coba lagi.');
                 hasAnswered = false;
                 updateUI();
+            } else {
+                console.log('Answer submitted successfully:', data);
             }
         }
 

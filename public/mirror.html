@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cermin Jiwa Kolektif</title>
+    <title>Refleksi Kehidupan</title>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
     <style>
         * {
@@ -485,13 +485,13 @@
 
         <div class="intro-content">
             <div class="intro-left">
-                <h1 class="intro-title">Cermin Jiwa Kolektif</h1>
+                <h1 class="intro-title">Refleksi Kehidupan</h1>
                 <p class="intro-subtitle">Refleksi Bersama untuk CoLearners</p>
 
                 <p class="intro-description">
                     Selamat datang di sesi refleksi kolektif. Dalam permainan ini, kita akan bersama-sama
                     "melukis" sebuah wajah yang merepresentasikan kondisi batin kolektif kita.
-                    Setiap jawaban yang kamu berikan akan membentuk fitur wajah tersebut —
+                    Setiap jawaban yang kamu berikan akan membentuk fitur wajah tersebut
                     dari rona kulit, sorot mata, hingga bentuk senyum.
                 </p>
 
@@ -506,7 +506,7 @@
 
                 <p class="intro-description" style="font-size: 1rem; color: #888;">
                     Terdapat 10 pertanyaan reflektif. Setiap pertanyaan memiliki waktu 30 detik untuk dijawab.
-                    Jawablah dengan jujur sesuai kondisi Anda saat ini.
+                    Jawablah dengan jujur sesuai kondisi kamu saat ini.
                 </p>
             </div>
 
@@ -515,9 +515,9 @@
                     <h3>Scan untuk Bergabung</h3>
                     <p>Buka kamera HP dan arahkan ke QR code</p>
                     <div id="qr-code"><img
-                            src="https://uxyojsfbpvugnudbhwhb.supabase.co/storage/v1/object/public/cotime/Cermin%20Kehidupan_qrcode.png"
+                            src="https://uxyojsfbpvugnudbhwhb.supabase.co/storage/v1/object/public/cotime/Screenshot%202026-01-21%20at%2018.22.01.png"
                             alt="face-expression-qr-code" width="400"></div>
-                    <p class="participant-url" id="participant-url">Loading...</p>
+                    <!-- <p class="participant-url" id="participant-url">Loading...</p> -->
                 </div>
 
                 <div class="participant-counter">
@@ -601,7 +601,6 @@
         let countdownEndTime = null;
         let countdownInterval = null;
         let participantCount = 0;
-        let presenceChannel = null;
 
         let faceState = new Array(10).fill(50);
         let voteCounts = new Array(10).fill(0);
@@ -617,15 +616,15 @@
 
         const questions = [
             'Seberapa berat rasanya untuk sekadar "hadir" hari ini?',
-            'Jika batin Anda punya mata, ke mana ia sedang memandang saat ini?',
-            'Seberapa kusut benang pikiran di kepala Anda?',
-            'Bayangkan ada beban tak kasat mata di pundak Anda. Seberapa besar ukurannya?',
-            'Adakah api kecil yang masih menyala di dalam dada Anda?',
-            'Seberapa jujur Anda telah berdamai dengan kelelahan diri sendiri?',
-            'Jika diminta merespons hidup saat ini dengan satu ekspresi mulut, mana yang Anda pilih?',
-            'Seberapa keras Anda menggigit kenyataan pahit akhir-akhir ini?',
-            'Seberapa lega ruang di dada Anda untuk bernafas sekarang?',
-            'Menatap hari esok, bagaimana posisi kepala Anda?'
+            'Jika batin kamu punya mata, ke mana ia sedang memandang saat ini?',
+            'Seberapa kusut benang pikiran di kepala kamu?',
+            'Bayangkan ada beban tak kasat mata di pundak kamu. Seberapa besar ukurannya?',
+            'Adakah api kecil yang masih menyala di dalam dada kamu?',
+            'Seberapa jujur kamu telah berdamai dengan kelelahan diri sendiri?',
+            'Jika diminta merespons hidup saat ini dengan satu ekspresi mulut, mana yang kamu pilih?',
+            'Seberapa keras kamu menggigit kenyataan pahit akhir-akhir ini?',
+            'Seberapa lega ruang di dada kamu untuk bernafas sekarang?',
+            'Menatap hari esok, bagaimana posisi kepala kamu?'
         ];
 
         let frame = 0;
@@ -681,34 +680,47 @@
             });
         }
 
-        // Setup Presence for participant counting
-        function setupPresence() {
-            presenceChannel = supabaseClient.channel('participant_presence', {
-                config: { presence: { key: 'host' } }
-            });
+        // Count participants from database
+        async function countParticipants() {
+            // Count participants who were seen in the last 30 seconds
+            const thirtySecondsAgo = new Date(Date.now() - 30000).toISOString();
 
-            presenceChannel
-                .on('presence', { event: 'sync' }, () => {
-                    const state = presenceChannel.presenceState();
-                    participantCount = Object.keys(state).filter(k => k !== 'host').length;
-                    document.getElementById('participant-count').innerText = participantCount;
+            const { data, error, count } = await supabaseClient
+                .from('participants')
+                .select('*', { count: 'exact', head: false })
+                .gte('last_seen', thirtySecondsAgo);
+
+            if (error) {
+                console.error('Error counting participants:', error);
+                // If table doesn't exist, show error message
+                if (error.code === '42P01') {
+                    document.getElementById('participant-count').innerText = 'Tabel belum dibuat!';
+                }
+            } else {
+                // Use data.length as fallback if count is null
+                participantCount = count ?? (data ? data.length : 0);
+                document.getElementById('participant-count').innerText = participantCount;
+                console.log('Participant count:', participantCount, 'Data:', data);
+            }
+        }
+
+        // Setup participant counting with realtime updates
+        function setupParticipantTracking() {
+            // Initial count
+            countParticipants();
+
+            // Recount every 5 seconds to handle stale participants
+            setInterval(countParticipants, 5000);
+
+            // Listen for realtime changes on participants table
+            supabaseClient
+                .channel('participants_channel')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'participants' }, () => {
+                    console.log('Participants table changed');
+                    countParticipants();
                 })
-                .on('presence', { event: 'join' }, ({ key }) => {
-                    if (key !== 'host') {
-                        participantCount++;
-                        document.getElementById('participant-count').innerText = participantCount;
-                    }
-                })
-                .on('presence', { event: 'leave' }, ({ key }) => {
-                    if (key !== 'host') {
-                        participantCount = Math.max(0, participantCount - 1);
-                        document.getElementById('participant-count').innerText = participantCount;
-                    }
-                })
-                .subscribe(async (status) => {
-                    if (status === 'SUBSCRIBED') {
-                        await presenceChannel.track({ online_at: new Date().toISOString() });
-                    }
+                .subscribe((status) => {
+                    console.log('Participants channel status:', status);
                 });
         }
 
@@ -729,7 +741,7 @@
         // Initialize
         async function init() {
             generateQRCode();
-            setupPresence();
+            setupParticipantTracking();
 
             const { data: gsData } = await supabaseClient
                 .from('game_state')
@@ -767,11 +779,13 @@
             supabaseClient
                 .channel('mirror_room')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'answers' }, payload => {
+                    console.log('New answer received:', payload.new);
                     const newAns = payload.new;
                     if (newAns.question_index < 10) {
                         rawAnswers[newAns.question_index].push(newAns.value);
                         recalc(newAns.question_index, true);
                         updateUI();
+                        console.log('Updated vote counts:', voteCounts);
                     }
                 })
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_state' }, payload => {
@@ -795,7 +809,9 @@
                     updateUI();
                     checkFinale();
                 })
-                .subscribe();
+                .subscribe((status) => {
+                    console.log('Mirror room subscription status:', status);
+                });
         }
 
         function recalc(index, triggerPulse = false) {
@@ -1051,8 +1067,11 @@
             }).eq('id', 1);
 
             await supabaseClient.from('answers').delete().gte('id', 0);
+            await supabaseClient.from('participants').delete().neq('id', '');
 
             currentQuestionIndex = 0;
+            participantCount = 0;
+            document.getElementById('participant-count').innerText = '0';
             currentPhase = 'intro';
             countdownEndTime = null;
             faceState = new Array(10).fill(50);
