@@ -1,0 +1,16 @@
+{
+  "name": "face-expression",
+  "version": "1.0.0",
+  "description": "Cermin Jiwa Kolektif - Interactive collective face expression visualization",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["reflection", "collective", "face", "expression", "supabase"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
