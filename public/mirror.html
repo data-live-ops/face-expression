@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cermin Jiwa Kolektif</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            overflow: hidden;
+            background: #0a0a0f;
+            font-family: 'Georgia', 'Times New Roman', serif;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        /* ========== INTRO OVERLAY ========== */
+        #intro-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1520 50%, #0f1a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 1;
+            transition: opacity 1s ease;
+        }
+
+        #intro-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .intro-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 80px;
+            max-width: 1400px;
+            padding: 40px;
+        }
+
+        .intro-left {
+            flex: 1;
+            max-width: 600px;
+        }
+
+        .intro-right {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 25px;
+        }
+
+        .intro-title {
+            font-size: 3.5rem;
+            color: #ffd369;
+            margin-bottom: 10px;
+            text-shadow: 0 0 40px rgba(255, 211, 105, 0.3);
+        }
+
+        .intro-subtitle {
+            font-size: 1.3rem;
+            color: #888;
+            margin-bottom: 35px;
+            font-style: italic;
+        }
+
+        .intro-description {
+            color: #ccc;
+            font-size: 1.15rem;
+            line-height: 1.9;
+            text-align: justify;
+            margin-bottom: 30px;
+        }
+
+        .intro-purpose {
+            background: rgba(255, 211, 105, 0.1);
+            border-left: 4px solid #ffd369;
+            padding: 20px 25px;
+            margin-bottom: 35px;
+            border-radius: 0 12px 12px 0;
+        }
+
+        .intro-purpose h3 {
+            color: #ffd369;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        .intro-purpose p {
+            color: #aaa;
+            font-size: 1rem;
+            line-height: 1.6;
+        }
+
+        /* QR Code Section */
+        .qr-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .qr-section h3 {
+            color: #ffd369;
+            font-size: 1.2rem;
+            margin-bottom: 5px;
+        }
+
+        .qr-section p {
+            color: #888;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        #qr-code {
+            background: white;
+            padding: 15px;
+            border-radius: 12px;
+            display: inline-block;
+        }
+
+        #qr-code canvas {
+            display: block;
+        }
+
+        .participant-url {
+            color: #4ade80;
+            font-size: 0.85rem;
+            margin-top: 15px;
+            word-break: break-all;
+            font-family: monospace;
+        }
+
+        /* Participant Counter */
+        .participant-counter {
+            background: rgba(74, 222, 128, 0.1);
+            border: 2px solid rgba(74, 222, 128, 0.3);
+            padding: 25px 50px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .participant-counter .count {
+            font-size: 4rem;
+            font-weight: bold;
+            color: #4ade80;
+            line-height: 1;
+        }
+
+        .participant-counter .label {
+            color: #888;
+            font-size: 1rem;
+            margin-top: 5px;
+        }
+
+        /* Start Session Button */
+        #start-session-btn {
+            background: linear-gradient(135deg, #4ade80, #22c55e);
+            color: #0a0a0f;
+            border: none;
+            padding: 20px 60px;
+            border-radius: 50px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        #start-session-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(74, 222, 128, 0.4);
+        }
+
+        /* ========== CONTROLS ========== */
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px 20px;
+            border-radius: 12px;
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        button {
+            padding: 12px 24px;
+            cursor: pointer;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.2s;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #start-btn {
+            background: #f39c12;
+        }
+
+        #start-btn:hover:not(:disabled) {
+            background: #d68910;
+        }
+
+        #next-btn {
+            background: #27ae60;
+        }
+
+        #next-btn:hover:not(:disabled) {
+            background: #1e8449;
+        }
+
+        #reset-btn {
+            background: #e74c3c;
+        }
+
+        #reset-btn:hover:not(:disabled) {
+            background: #c0392b;
+        }
+
+        /* ========== HUD ========== */
+        .hud {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            color: white;
+            text-align: right;
+            pointer-events: none;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .hud h2 {
+            font-size: 1.4rem;
+            color: #ffd369;
+            margin-bottom: 5px;
+        }
+
+        .hud p {
+            margin: 3px 0;
+            font-size: 0.95rem;
+            color: #aaa;
+        }
+
+        /* ========== COUNTDOWN DISPLAY ========== */
+        #countdown-display {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+            z-index: 30;
+        }
+
+        #countdown-timer {
+            font-size: 8rem;
+            font-weight: bold;
+            color: #ffd369;
+            text-shadow: 0 0 30px rgba(255, 211, 105, 0.5);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        #countdown-timer.active {
+            opacity: 1;
+        }
+
+        #countdown-timer.warning {
+            color: #e74c3c;
+            text-shadow: 0 0 30px rgba(231, 76, 60, 0.5);
+        }
+
+        #vote-counter {
+            font-size: 2rem;
+            color: #aaa;
+            margin-top: 20px;
+        }
+
+        #phase-indicator {
+            font-size: 1.2rem;
+            color: #ffd369;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        /* ========== RESULTS OVERLAY ========== */
+        #results-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 25px 35px;
+            border-radius: 16px;
+            border: 2px solid #ffd369;
+            z-index: 40;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.5s ease;
+            pointer-events: none;
+        }
+
+        #results-overlay.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        #results-overlay h3 {
+            color: #ffd369;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+        }
+
+        #results-overlay .result-item {
+            color: #ccc;
+            font-size: 1.1rem;
+            margin: 8px 0;
+        }
+
+        #results-overlay .result-value {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        /* ========== QUESTION DISPLAY ========== */
+        #question-display {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px 40px;
+            border-radius: 12px;
+            text-align: center;
+            max-width: 600px;
+            z-index: 25;
+        }
+
+        #question-display h3 {
+            color: #ffd369;
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+
+        #question-display p {
+            color: #ddd;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        /* ========== FINALE OVERLAY ========== */
+        #finale-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 2s ease, background 2s ease;
+            z-index: 50;
+        }
+
+        #finale-overlay.active {
+            opacity: 1;
+            background: rgba(0, 0, 0, 0.85);
+        }
+
+        .finale-content {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 60px;
+            max-width: 1200px;
+            padding: 40px;
+        }
+
+        .finale-text {
+            max-width: 550px;
+            color: #e8e8e8;
+        }
+
+        .finale-text h2 {
+            color: #ffd369;
+            font-size: 2rem;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+
+        .finale-text .archetype-desc {
+            color: #888;
+            font-size: 1rem;
+            margin-bottom: 25px;
+            font-style: italic;
+        }
+
+        .finale-text .message {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            text-align: justify;
+            color: #ccc;
+        }
+
+        .finale-face-container {
+            width: 300px;
+            height: 400px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Animated background for intro */
+        .intro-bg-animation {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: -1;
+        }
+
+        .floating-circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 211, 105, 0.03);
+            animation: float 20s infinite ease-in-out;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(180deg); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- INTRO OVERLAY -->
+    <div id="intro-overlay">
+        <div class="intro-bg-animation">
+            <div class="floating-circle" style="width: 300px; height: 300px; top: 10%; left: 5%; animation-delay: 0s;"></div>
+            <div class="floating-circle" style="width: 200px; height: 200px; top: 60%; left: 80%; animation-delay: -5s;"></div>
+            <div class="floating-circle" style="width: 150px; height: 150px; top: 80%; left: 20%; animation-delay: -10s;"></div>
+        </div>
+
+        <div class="intro-content">
+            <div class="intro-left">
+                <h1 class="intro-title">Cermin Jiwa Kolektif</h1>
+                <p class="intro-subtitle">Refleksi Bersama untuk CoLearners</p>
+
+                <p class="intro-description">
+                    Selamat datang di sesi refleksi kolektif. Dalam permainan ini, kita akan bersama-sama
+                    "melukis" sebuah wajah yang merepresentasikan kondisi batin kolektif kita.
+                    Setiap jawaban yang Anda berikan akan membentuk fitur wajah tersebut —
+                    dari rona kulit, sorot mata, hingga bentuk senyum.
+                </p>
+
+                <div class="intro-purpose">
+                    <h3>Tujuan Permainan</h3>
+                    <p>
+                        Untuk mengetahui dan merepresentasikan kondisi rata-rata pikiran dan hati
+                        dari seluruh CoLearners. Di akhir sesi, wajah yang muncul adalah cerminan
+                        jiwa kolektif kita — sebuah potret bersama yang jujur dan bermakna.
+                    </p>
+                </div>
+
+                <p class="intro-description" style="font-size: 1rem; color: #888;">
+                    Terdapat 10 pertanyaan reflektif. Setiap pertanyaan memiliki waktu 30 detik untuk dijawab.
+                    Jawablah dengan jujur sesuai kondisi Anda saat ini.
+                </p>
+            </div>
+
+            <div class="intro-right">
+                <div class="qr-section">
+                    <h3>Scan untuk Bergabung</h3>
+                    <p>Buka kamera HP dan arahkan ke QR code</p>
+                    <div id="qr-code"></div>
+                    <p class="participant-url" id="participant-url">Loading...</p>
+                </div>
+
+                <div class="participant-counter">
+                    <div class="count" id="participant-count">0</div>
+                    <div class="label">Peserta Terhubung</div>
+                </div>
+
+                <button id="start-session-btn" onclick="startSession()">Mulai Sesi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN CANVAS -->
+    <canvas id="faceCanvas"></canvas>
+
+    <!-- HUD -->
+    <div class="hud">
+        <h2 id="stage-name">Stage 1: Rona Dasar</h2>
+        <p id="stats">Avg: -% | Votes: 0</p>
+        <p id="archetype-preview">Arketipe: -</p>
+    </div>
+
+    <!-- COUNTDOWN DISPLAY -->
+    <div id="countdown-display">
+        <p id="phase-indicator">Menunggu</p>
+        <div id="countdown-timer">30</div>
+        <p id="vote-counter">0 suara masuk</p>
+    </div>
+
+    <!-- QUESTION DISPLAY -->
+    <div id="question-display">
+        <h3 id="q-feature">Rona Dasar</h3>
+        <p id="q-text">Seberapa berat rasanya untuk sekadar "hadir" hari ini?</p>
+    </div>
+
+    <!-- RESULTS OVERLAY -->
+    <div id="results-overlay">
+        <h3>Hasil Pertanyaan</h3>
+        <p class="result-item">Total Suara: <span class="result-value" id="result-votes">0</span></p>
+        <p class="result-item">Rata-rata: <span class="result-value" id="result-avg">50%</span></p>
+        <p class="result-item" id="result-note">Klik "Next Question" untuk lanjut</p>
+    </div>
+
+    <!-- CONTROLS -->
+    <div id="controls">
+        <button id="start-btn" onclick="startCountdown()">Mulai</button>
+        <button id="next-btn" onclick="nextQuestion()" disabled>Next Question</button>
+        <button id="reset-btn" onclick="resetMirror()">Reset</button>
+    </div>
+
+    <!-- FINALE OVERLAY -->
+    <div id="finale-overlay">
+        <div class="finale-content">
+            <div class="finale-face-container">
+                <canvas id="finaleCanvas" width="300" height="400"></canvas>
+            </div>
+            <div class="finale-text">
+                <h2 id="finale-archetype">Sang Penanggung Beban</h2>
+                <p class="archetype-desc" id="finale-desc">Mata redup, letih, warna pucat.</p>
+                <p class="message" id="finale-message"></p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase Config
+        const SUPABASE_URL = 'https://uxyojsfbpvugnudbhwhb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4eW9qc2ZicHZ1Z251ZGJod2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4OTI0NjgsImV4cCI6MjA4NDQ2ODQ2OH0.p8uP0jHpEvsblAR--oSST5rSAXkhM3-MgRvQTsxv_r0';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        const canvas = document.getElementById('faceCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Constants
+        const COUNTDOWN_DURATION = 30;
+
+        // Game State
+        let currentQuestionIndex = 0;
+        let currentPhase = 'intro';
+        let countdownEndTime = null;
+        let countdownInterval = null;
+        let participantCount = 0;
+        let presenceChannel = null;
+
+        let faceState = new Array(10).fill(50);
+        let voteCounts = new Array(10).fill(0);
+        let rawAnswers = Array.from({ length: 10 }, () => []);
+
+        let displayState = new Array(10).fill(50);
+        let targetState = new Array(10).fill(50);
+
+        const featureNames = [
+            "Rona Dasar", "Arah Mata", "Kerutan Dahi", "Beban Pundak", "Sorot Mata",
+            "Garis Waktu", "Bentuk Mulut", "Ketegangan Rahang", "Kedalaman Nafas", "Sikap Dagu"
+        ];
+
+        const questions = [
+            'Seberapa berat rasanya untuk sekadar "hadir" hari ini?',
+            'Jika batin Anda punya mata, ke mana ia sedang memandang saat ini?',
+            'Seberapa kusut benang pikiran di kepala Anda?',
+            'Bayangkan ada beban tak kasat mata di pundak Anda. Seberapa besar ukurannya?',
+            'Adakah api kecil yang masih menyala di dalam dada Anda?',
+            'Seberapa jujur Anda telah berdamai dengan kelelahan diri sendiri?',
+            'Jika diminta merespons hidup saat ini dengan satu ekspresi mulut, mana yang Anda pilih?',
+            'Seberapa keras Anda menggigit kenyataan pahit akhir-akhir ini?',
+            'Seberapa lega ruang di dada Anda untuk bernafas sekarang?',
+            'Menatap hari esok, bagaimana posisi kepala Anda?'
+        ];
+
+        let frame = 0;
+        let pulseIntensity = 0;
+        let breathPhase = 0;
+        let showFinale = false;
+
+        const archetypes = {
+            burdened: {
+                name: "Sang Penanggung Beban",
+                desc: "Mata redup, letih, warna pucat.",
+                message: "Inilah wajah yang memikul beban sejarah di pundaknya sendiri, sebuah peta bumi manusia yang lelah namun menolak untuk luruh meski dihimpit kenyataan pahit yang datang bertubi-tubi. Kelopak mata yang berat itu bukanlah tanda kekalahan, melainkan sebuah jeda bagi ketabahan bisu yang sedang memupuk akar keberanian di kedalaman batin, karena di dalam diamnya, ia sedang menghimpun sisa-sisa martabat untuk kembali berdiri tegak menantang matahari esok hari."
+            },
+            stoic: {
+                name: "Sang Petapa Tabah",
+                desc: "Datar, rahang tegas, tatapan lurus.",
+                message: "Telah kenyang ia menelan ombak pasang kehidupan hingga wajahnya menjelma tebing karang yang tak lagi mempan oleh ratap tangis cengeng maupun buaian harapan palsu yang melenakan. Ketenangannya adalah senjata paling berbahaya; sebuah manifestasi dari manusia yang telah berdamai dengan ketidakpastian dan memilih untuk menatap dunia dengan mata telanjang, memahami sepenuhnya bahwa satu-satunya cara untuk bertahan adalah dengan tetap menegakkan punggung di hadapan angin ribut tanpa sekali pun berkedip."
+            },
+            warm: {
+                name: "Sang Manusia Hangat",
+                desc: "Senyum tulus, mata berbinar, rona segar.",
+                message: "Di tengah dunia yang bising dan seringkali bengis, wajah ini memilih menjadi jeda yang meneduhkan, sebuah kesaksian bahwa kehangatan antar sesama masih sanggup mekar di celah-celah himpitan hidup yang mencekik. Senyum tipis itu bukan tanda ia lupa akan penderitaan, melainkan sebuah keputusan berani untuk terus merawat benih-benih harapan kecil selayaknya seorang petani yang mencintai tanahnya di musim paceklik, karena bagi jiwa-jiwa ini, menjadi lembut di tengah kekasaran zaman adalah bentuk perlawanan yang paling luhur."
+            },
+            revolutionary: {
+                name: "Sang Revolusioner",
+                desc: "Dagu mendongak, tatapan menyala, senyum menantang.",
+                message: "Inilah wajah yang telah mengumumkan perang terbuka terhadap keputusasaan, dengan mata yang menyimpan bara sekam siap membakar segala bentuk kekerdilan jiwa yang mencoba membelenggu langkahnya. Ia menatap masa depan bukan sebagai peminta-minta yang mengharap belas kasihan nasib, melainkan sebagai pembentuk sejarah yang sah yang maju ke gelanggang dengan kepala tegak dan nyali yang menyala-nyala, karena ia tahu benar bahwa hidup adalah pertempuran yang menuntut keberanian mutlak, dan setiap langkah mundur adalah pengkhianatan terhadap hidup itu sendiri."
+            }
+        };
+
+        // Canvas Setup
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Generate QR Code
+        function generateQRCode() {
+            const participantUrl = window.location.origin + '/';
+            document.getElementById('participant-url').innerText = participantUrl;
+
+            QRCode.toCanvas(document.createElement('canvas'), participantUrl, {
+                width: 200,
+                margin: 0,
+                color: { dark: '#000000', light: '#ffffff' }
+            }, function(error, canvas) {
+                if (!error) {
+                    document.getElementById('qr-code').innerHTML = '';
+                    document.getElementById('qr-code').appendChild(canvas);
+                }
+            });
+        }
+
+        // Setup Presence for participant counting
+        function setupPresence() {
+            presenceChannel = supabaseClient.channel('participant_presence', {
+                config: { presence: { key: 'host' } }
+            });
+
+            presenceChannel
+                .on('presence', { event: 'sync' }, () => {
+                    const state = presenceChannel.presenceState();
+                    participantCount = Object.keys(state).filter(k => k !== 'host').length;
+                    document.getElementById('participant-count').innerText = participantCount;
+                })
+                .on('presence', { event: 'join' }, ({ key }) => {
+                    if (key !== 'host') {
+                        participantCount++;
+                        document.getElementById('participant-count').innerText = participantCount;
+                    }
+                })
+                .on('presence', { event: 'leave' }, ({ key }) => {
+                    if (key !== 'host') {
+                        participantCount = Math.max(0, participantCount - 1);
+                        document.getElementById('participant-count').innerText = participantCount;
+                    }
+                })
+                .subscribe(async (status) => {
+                    if (status === 'SUBSCRIBED') {
+                        await presenceChannel.track({ online_at: new Date().toISOString() });
+                    }
+                });
+        }
+
+        // Start Session (from intro to first question)
+        async function startSession() {
+            const { error } = await supabaseClient
+                .from('game_state')
+                .update({ phase: 'waiting', current_question_index: 0 })
+                .eq('id', 1);
+
+            if (!error) {
+                currentPhase = 'waiting';
+                document.getElementById('intro-overlay').classList.add('hidden');
+                updateUI();
+            }
+        }
+
+        // Initialize
+        async function init() {
+            generateQRCode();
+            setupPresence();
+
+            const { data: gsData } = await supabaseClient
+                .from('game_state')
+                .select('current_question_index, phase, countdown_end_time')
+                .eq('id', 1)
+                .single();
+
+            if (gsData) {
+                currentQuestionIndex = gsData.current_question_index;
+                currentPhase = gsData.phase || 'intro';
+                countdownEndTime = gsData.countdown_end_time ? new Date(gsData.countdown_end_time) : null;
+
+                if (currentPhase !== 'intro') {
+                    document.getElementById('intro-overlay').classList.add('hidden');
+                }
+
+                if (currentPhase === 'countdown' && countdownEndTime) {
+                    resumeCountdown();
+                }
+            }
+
+            const { data: allAnswers } = await supabaseClient.from('answers').select('question_index, value');
+
+            if (allAnswers) {
+                allAnswers.forEach(ans => {
+                    if (ans.question_index < 10) {
+                        rawAnswers[ans.question_index].push(ans.value);
+                    }
+                });
+                recalcAll();
+            }
+
+            updateUI();
+
+            supabaseClient
+                .channel('mirror_room')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'answers' }, payload => {
+                    const newAns = payload.new;
+                    if (newAns.question_index < 10) {
+                        rawAnswers[newAns.question_index].push(newAns.value);
+                        recalc(newAns.question_index, true);
+                        updateUI();
+                    }
+                })
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_state' }, payload => {
+                    const newData = payload.new;
+                    currentQuestionIndex = newData.current_question_index;
+                    currentPhase = newData.phase || 'waiting';
+                    countdownEndTime = newData.countdown_end_time ? new Date(newData.countdown_end_time) : null;
+
+                    if (currentPhase === 'intro') {
+                        document.getElementById('intro-overlay').classList.remove('hidden');
+                    } else {
+                        document.getElementById('intro-overlay').classList.add('hidden');
+                    }
+
+                    if (currentPhase === 'countdown' && countdownEndTime) {
+                        resumeCountdown();
+                    } else {
+                        clearInterval(countdownInterval);
+                    }
+
+                    updateUI();
+                    checkFinale();
+                })
+                .subscribe();
+        }
+
+        function recalc(index, triggerPulse = false) {
+            const arr = rawAnswers[index];
+            if (arr.length > 0) {
+                const sum = arr.reduce((a, b) => a + b, 0);
+                faceState[index] = sum / arr.length;
+                targetState[index] = faceState[index];
+                voteCounts[index] = arr.length;
+            } else {
+                faceState[index] = 50;
+                targetState[index] = 50;
+                voteCounts[index] = 0;
+            }
+
+            if (triggerPulse) {
+                pulseIntensity = 1.0;
+            }
+        }
+
+        function recalcAll() {
+            for (let i = 0; i < 10; i++) recalc(i, false);
+        }
+
+        function updateDisplayState() {
+            for (let i = 0; i < 10; i++) {
+                displayState[i] += (targetState[i] - displayState[i]) * 0.05;
+            }
+            pulseIntensity *= 0.95;
+        }
+
+        function getOverallScore() {
+            let sum = 0, count = 0;
+            for (let i = 0; i < 10; i++) {
+                if (voteCounts[i] > 0) {
+                    sum += displayState[i];
+                    count++;
+                }
+            }
+            return count > 0 ? sum / count : 50;
+        }
+
+        function getArchetype(score) {
+            if (score <= 40) return archetypes.burdened;
+            if (score <= 65) return archetypes.stoic;
+            if (score <= 85) return archetypes.warm;
+            return archetypes.revolutionary;
+        }
+
+        function updateUI() {
+            if (currentPhase === 'intro') return;
+
+            const currentAvg = Math.round(faceState[currentQuestionIndex] || 50);
+            const count = voteCounts[currentQuestionIndex] || 0;
+            const overall = Math.round(getOverallScore());
+            const archetype = getArchetype(overall);
+
+            document.getElementById('stage-name').innerText = `Stage ${currentQuestionIndex + 1}: ${featureNames[currentQuestionIndex] || 'Selesai'}`;
+            document.getElementById('stats').innerText = `Current: ${currentAvg}% | Votes: ${count} | Overall: ${overall}%`;
+            document.getElementById('archetype-preview').innerText = `Arketipe: ${archetype.name}`;
+
+            if (currentQuestionIndex < 10) {
+                document.getElementById('q-feature').innerText = featureNames[currentQuestionIndex];
+                document.getElementById('q-text').innerText = questions[currentQuestionIndex];
+                document.getElementById('question-display').style.display = 'block';
+            } else {
+                document.getElementById('question-display').style.display = 'none';
+            }
+
+            document.getElementById('vote-counter').innerText = `${count} suara masuk`;
+            updatePhaseUI();
+
+            if (currentPhase === 'results') {
+                document.getElementById('result-votes').innerText = count;
+                document.getElementById('result-avg').innerText = `${currentAvg}%`;
+                document.getElementById('results-overlay').classList.add('active');
+            } else {
+                document.getElementById('results-overlay').classList.remove('active');
+            }
+        }
+
+        function updatePhaseUI() {
+            const startBtn = document.getElementById('start-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const timerEl = document.getElementById('countdown-timer');
+            const phaseEl = document.getElementById('phase-indicator');
+
+            if (currentQuestionIndex >= 10) {
+                startBtn.disabled = true;
+                nextBtn.disabled = true;
+                phaseEl.innerText = 'Selesai';
+                timerEl.classList.remove('active');
+                return;
+            }
+
+            switch (currentPhase) {
+                case 'waiting':
+                    phaseEl.innerText = 'Tekan "Mulai" untuk memulai';
+                    startBtn.disabled = false;
+                    nextBtn.disabled = true;
+                    timerEl.classList.remove('active');
+                    timerEl.innerText = COUNTDOWN_DURATION;
+                    break;
+
+                case 'countdown':
+                    phaseEl.innerText = 'Voting Berlangsung';
+                    startBtn.disabled = true;
+                    nextBtn.disabled = true;
+                    timerEl.classList.add('active');
+                    break;
+
+                case 'results':
+                    phaseEl.innerText = 'Hasil';
+                    startBtn.disabled = true;
+                    nextBtn.disabled = false;
+                    timerEl.classList.remove('active');
+                    timerEl.innerText = '0';
+                    break;
+            }
+        }
+
+        async function startCountdown() {
+            if (currentPhase !== 'waiting') return;
+
+            const endTime = new Date(Date.now() + COUNTDOWN_DURATION * 1000);
+
+            const { error } = await supabaseClient
+                .from('game_state')
+                .update({
+                    phase: 'countdown',
+                    countdown_end_time: endTime.toISOString()
+                })
+                .eq('id', 1);
+
+            if (!error) {
+                currentPhase = 'countdown';
+                countdownEndTime = endTime;
+                resumeCountdown();
+                updateUI();
+            }
+        }
+
+        function resumeCountdown() {
+            clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(() => {
+                const now = new Date();
+                const remaining = Math.max(0, Math.ceil((countdownEndTime - now) / 1000));
+
+                const timerEl = document.getElementById('countdown-timer');
+                timerEl.innerText = remaining;
+
+                if (remaining <= 10) {
+                    timerEl.classList.add('warning');
+                } else {
+                    timerEl.classList.remove('warning');
+                }
+
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                    endCountdown();
+                }
+            }, 100);
+        }
+
+        async function endCountdown() {
+            const { error } = await supabaseClient
+                .from('game_state')
+                .update({ phase: 'results' })
+                .eq('id', 1);
+
+            if (!error) {
+                currentPhase = 'results';
+                updateUI();
+            }
+        }
+
+        async function nextQuestion() {
+            if (currentPhase !== 'results') return;
+
+            if (currentQuestionIndex >= 9) {
+                const { error } = await supabaseClient
+                    .from('game_state')
+                    .update({
+                        current_question_index: 10,
+                        phase: 'waiting',
+                        countdown_end_time: null
+                    })
+                    .eq('id', 1);
+
+                if (!error) {
+                    currentQuestionIndex = 10;
+                    currentPhase = 'waiting';
+                    updateUI();
+                    checkFinale();
+                }
+                return;
+            }
+
+            const newIndex = currentQuestionIndex + 1;
+            const { error } = await supabaseClient
+                .from('game_state')
+                .update({
+                    current_question_index: newIndex,
+                    phase: 'waiting',
+                    countdown_end_time: null
+                })
+                .eq('id', 1);
+
+            if (!error) {
+                currentQuestionIndex = newIndex;
+                currentPhase = 'waiting';
+                updateUI();
+            }
+        }
+
+        function checkFinale() {
+            if (currentQuestionIndex >= 10 && !showFinale) {
+                setTimeout(() => {
+                    showFinale = true;
+                    showFinaleScreen();
+                }, 2000);
+            }
+        }
+
+        function showFinaleScreen() {
+            const score = getOverallScore();
+            const archetype = getArchetype(score);
+
+            document.getElementById('finale-archetype').innerText = archetype.name;
+            document.getElementById('finale-desc').innerText = archetype.desc;
+            document.getElementById('finale-message').innerText = archetype.message;
+
+            document.getElementById('finale-overlay').classList.add('active');
+
+            const finaleCanvas = document.getElementById('finaleCanvas');
+            const finaleCtx = finaleCanvas.getContext('2d');
+            drawFaceOnContext(finaleCtx, 150, 200, 1, displayState, true);
+        }
+
+        async function resetMirror() {
+            if (!confirm('Yakin ingin reset? Semua jawaban akan dihapus dan kembali ke intro.')) return;
+
+            showFinale = false;
+            document.getElementById('finale-overlay').classList.remove('active');
+            document.getElementById('intro-overlay').classList.remove('hidden');
+            clearInterval(countdownInterval);
+
+            await supabaseClient.from('game_state').update({
+                current_question_index: 0,
+                phase: 'intro',
+                countdown_end_time: null
+            }).eq('id', 1);
+
+            await supabaseClient.from('answers').delete().gte('id', 0);
+
+            currentQuestionIndex = 0;
+            currentPhase = 'intro';
+            countdownEndTime = null;
+            faceState = new Array(10).fill(50);
+            targetState = new Array(10).fill(50);
+            displayState = new Array(10).fill(50);
+            voteCounts = new Array(10).fill(0);
+            rawAnswers = Array.from({ length: 10 }, () => []);
+            updateUI();
+        }
+
+        // Face Drawing Functions
+        function drawFace() {
+            if (currentPhase === 'intro') return;
+
+            updateDisplayState();
+            breathPhase += 0.02;
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const overall = getOverallScore();
+            drawBackground(overall);
+
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const scale = Math.min(canvas.width, canvas.height) / 600;
+
+            drawFaceOnContext(ctx, centerX, centerY, scale, displayState);
+
+            if (pulseIntensity > 0.01) {
+                ctx.fillStyle = `rgba(255, 211, 105, ${pulseIntensity * 0.15})`;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function drawBackground(overall) {
+            const gradient = ctx.createRadialGradient(
+                canvas.width / 2, canvas.height / 2, 0,
+                canvas.width / 2, canvas.height / 2, canvas.width * 0.8
+            );
+
+            if (overall <= 40) {
+                gradient.addColorStop(0, '#1a1520');
+                gradient.addColorStop(1, '#0a0a0f');
+            } else if (overall <= 65) {
+                gradient.addColorStop(0, '#1a1f2e');
+                gradient.addColorStop(1, '#0a0d12');
+            } else if (overall <= 85) {
+                gradient.addColorStop(0, '#1f1a15');
+                gradient.addColorStop(1, '#0f0a08');
+            } else {
+                gradient.addColorStop(0, '#2a2010');
+                gradient.addColorStop(1, '#12100a');
+            }
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawAmbientParticles(overall);
+        }
+
+        function drawAmbientParticles(overall) {
+            const particleCount = Math.floor(overall / 5);
+            const time = frame * 0.001;
+
+            for (let i = 0; i < particleCount; i++) {
+                const seed = i * 137.5;
+                const x = (Math.sin(seed + time) * 0.5 + 0.5) * canvas.width;
+                const y = (Math.cos(seed * 1.3 + time * 0.7) * 0.5 + 0.5) * canvas.height;
+                const alpha = 0.1 + Math.sin(time * 2 + i) * 0.05;
+                const size = 1 + Math.sin(seed) * 0.5;
+
+                ctx.fillStyle = `rgba(255, 211, 105, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function isFeatureRevealed(stageIndex) {
+            return currentQuestionIndex > stageIndex || voteCounts[stageIndex] > 0;
+        }
+
+        function drawFaceOnContext(context, cx, cy, scale, state, forceFullFace = false) {
+            context.save();
+            context.translate(cx, cy);
+            context.scale(scale, scale);
+
+            const skinTone = state[0];
+            const eyeDirection = state[1];
+            const browTension = state[2];
+            const shoulderPosture = state[3];
+            const eyeSparkle = state[4];
+            const eyeBags = state[5];
+            const mouthShape = state[6];
+            const jawTension = state[7];
+            const breathDepth = state[8];
+            const chinAngle = state[9];
+
+            const showFaceBase = forceFullFace || isFeatureRevealed(0);
+            const showEyes = forceFullFace || isFeatureRevealed(1);
+            const showBrows = forceFullFace || isFeatureRevealed(2);
+            const showShoulders = forceFullFace || isFeatureRevealed(3);
+            const showSparkle = forceFullFace || isFeatureRevealed(4);
+            const showEyeBags = forceFullFace || isFeatureRevealed(5);
+            const showMouth = forceFullFace || isFeatureRevealed(6);
+            const showJaw = forceFullFace || isFeatureRevealed(7);
+            const enableBreath = forceFullFace || isFeatureRevealed(8);
+            const enableTilt = forceFullFace || isFeatureRevealed(9);
+
+            if (enableTilt) {
+                const tiltAngle = (chinAngle - 50) / 100 * 0.15;
+                context.rotate(tiltAngle);
+            }
+
+            if (enableBreath) {
+                const breathScale = 1 + Math.sin(breathPhase) * (0.005 + breathDepth / 100 * 0.015);
+                context.scale(1, breathScale);
+            }
+
+            if (!showFaceBase) {
+                drawFaceOutline(context);
+                context.restore();
+                return;
+            }
+
+            if (showShoulders) {
+                drawNeckShoulders(context, shoulderPosture);
+            } else if (showFaceBase) {
+                drawNeckPlaceholder(context);
+            }
+
+            drawFaceBase(context, skinTone);
+            drawNose(context, skinTone);
+
+            if (showEyeBags) drawEyeBags(context, eyeBags);
+            if (showEyes) {
+                drawEyes(context, eyeDirection, showSparkle ? eyeSparkle : 0, skinTone);
+            } else {
+                drawEyePlaceholders(context);
+            }
+            if (showBrows) {
+                drawEyebrows(context, browTension);
+                drawForehead(context, browTension);
+            }
+            if (showMouth) {
+                drawMouth(context, mouthShape, jawTension);
+            } else {
+                drawMouthPlaceholder(context);
+            }
+            if (showJaw) drawJaw(context, jawTension);
+
+            context.restore();
+        }
+
+        function drawFaceOutline(context) {
+            context.strokeStyle = 'rgba(255, 211, 105, 0.15)';
+            context.lineWidth = 2;
+            context.setLineDash([5, 10]);
+            context.beginPath();
+            context.ellipse(0, 0, 100, 130, 0, 0, Math.PI * 2);
+            context.stroke();
+            context.beginPath();
+            context.moveTo(-40, 120);
+            context.lineTo(-40, 180);
+            context.moveTo(40, 120);
+            context.lineTo(40, 180);
+            context.stroke();
+            context.setLineDash([]);
+            context.fillStyle = 'rgba(255, 211, 105, 0.3)';
+            context.font = '16px Georgia';
+            context.textAlign = 'center';
+            context.fillText('Menunggu jawaban...', 0, 200);
+            context.font = '60px Georgia';
+            context.fillStyle = 'rgba(255, 211, 105, 0.1)';
+            context.fillText('?', 0, 20);
+        }
+
+        function drawNeckPlaceholder(context) {
+            context.fillStyle = 'rgba(180, 150, 120, 0.5)';
+            context.beginPath();
+            context.moveTo(-35, 120);
+            context.lineTo(-35, 180);
+            context.lineTo(35, 180);
+            context.lineTo(35, 120);
+            context.closePath();
+            context.fill();
+        }
+
+        function drawEyePlaceholders(context) {
+            context.fillStyle = 'rgba(100, 80, 60, 0.3)';
+            context.beginPath();
+            context.ellipse(-35, -20, 18, 10, 0, 0, Math.PI * 2);
+            context.fill();
+            context.beginPath();
+            context.ellipse(35, -20, 18, 10, 0, 0, Math.PI * 2);
+            context.fill();
+        }
+
+        function drawMouthPlaceholder(context) {
+            context.strokeStyle = 'rgba(100, 80, 60, 0.3)';
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(-20, 60);
+            context.lineTo(20, 60);
+            context.stroke();
+        }
+
+        function drawNeckShoulders(context, posture) {
+            const h = posture / 100;
+            const shoulderDrop = (1 - h) * 20;
+            context.fillStyle = '#c9a87c';
+            context.beginPath();
+            context.moveTo(-40, 120);
+            context.quadraticCurveTo(-35, 180, -60, 220 + shoulderDrop);
+            context.lineTo(60, 220 + shoulderDrop);
+            context.quadraticCurveTo(35, 180, 40, 120);
+            context.closePath();
+            context.fill();
+            context.fillStyle = '#3a3a4a';
+            context.beginPath();
+            context.ellipse(0, 230 + shoulderDrop, 120, 30, 0, 0, Math.PI);
+            context.fill();
+        }
+
+        function drawFaceBase(context, skinTone) {
+            const h = skinTone / 100;
+            const r = Math.floor(160 + h * 40);
+            const g = Math.floor(130 + h * 40);
+            const b = Math.floor(110 + h * 25);
+            context.fillStyle = `rgb(${r}, ${g}, ${b})`;
+            context.beginPath();
+            context.ellipse(0, 0, 100, 130, 0, 0, Math.PI * 2);
+            context.fill();
+            const gradient = context.createRadialGradient(0, -20, 0, 0, 0, 130);
+            gradient.addColorStop(0, `rgba(255, 255, 255, ${0.05 + h * 0.1})`);
+            gradient.addColorStop(0.5, 'rgba(0, 0, 0, 0)');
+            gradient.addColorStop(1, `rgba(0, 0, 0, ${0.1 + (1 - h) * 0.1})`);
+            context.fillStyle = gradient;
+            context.beginPath();
+            context.ellipse(0, 0, 100, 130, 0, 0, Math.PI * 2);
+            context.fill();
+        }
+
+        function drawEyes(context, direction, sparkle, skinTone) {
+            const h = direction / 100;
+            const eyeY = -20 + (0.5 - h) * 15;
+            const sparkleH = sparkle / 100;
+            const skinH = skinTone / 100;
+            context.fillStyle = `rgb(${240 + skinH * 15}, ${240 + skinH * 15}, ${245})`;
+            context.beginPath();
+            context.ellipse(-35, eyeY, 22, 14, 0, 0, Math.PI * 2);
+            context.fill();
+            context.beginPath();
+            context.ellipse(35, eyeY, 22, 14, 0, 0, Math.PI * 2);
+            context.fill();
+            const pupilOffsetY = (0.5 - h) * 8;
+            const irisColor = sparkleH > 0.5 ? '#3a2a1a' : '#2a2020';
+            context.fillStyle = irisColor;
+            context.beginPath();
+            context.arc(-35, eyeY + pupilOffsetY, 10, 0, Math.PI * 2);
+            context.fill();
+            context.beginPath();
+            context.arc(35, eyeY + pupilOffsetY, 10, 0, Math.PI * 2);
+            context.fill();
+            context.fillStyle = '#0a0a0a';
+            context.beginPath();
+            context.arc(-35, eyeY + pupilOffsetY, 5, 0, Math.PI * 2);
+            context.fill();
+            context.beginPath();
+            context.arc(35, eyeY + pupilOffsetY, 5, 0, Math.PI * 2);
+            context.fill();
+            if (sparkleH > 0.2) {
+                const glowIntensity = sparkleH;
+                context.fillStyle = `rgba(255, 255, 255, ${0.3 + glowIntensity * 0.5})`;
+                context.beginPath();
+                context.arc(-38, eyeY + pupilOffsetY - 3, 2 + glowIntensity * 2, 0, Math.PI * 2);
+                context.fill();
+                context.beginPath();
+                context.arc(32, eyeY + pupilOffsetY - 3, 2 + glowIntensity * 2, 0, Math.PI * 2);
+                context.fill();
+            }
+            const lidClose = (1 - sparkleH) * 8;
+            context.fillStyle = '#c9a87c';
+            context.beginPath();
+            context.ellipse(-35, eyeY - 14 + lidClose, 24, 8, 0, 0, Math.PI, true);
+            context.fill();
+            context.beginPath();
+            context.ellipse(35, eyeY - 14 + lidClose, 24, 8, 0, 0, Math.PI, true);
+            context.fill();
+        }
+
+        function drawEyeBags(context, acceptance) {
+            const h = acceptance / 100;
+            const bagIntensity = 1 - h;
+            if (bagIntensity > 0.2) {
+                context.fillStyle = `rgba(100, 80, 70, ${bagIntensity * 0.3})`;
+                context.beginPath();
+                context.ellipse(-35, -5, 18, 6 + bagIntensity * 4, 0, 0, Math.PI);
+                context.fill();
+                context.beginPath();
+                context.ellipse(35, -5, 18, 6 + bagIntensity * 4, 0, 0, Math.PI);
+                context.fill();
+            }
+        }
+
+        function drawEyebrows(context, tension) {
+            const h = tension / 100;
+            const browAngle = (1 - h) * 0.2;
+            const browY = -50 + (1 - h) * 10;
+            context.strokeStyle = '#5a4030';
+            context.lineWidth = 4;
+            context.lineCap = 'round';
+            context.save();
+            context.translate(-35, browY);
+            context.rotate(-browAngle);
+            context.beginPath();
+            context.moveTo(-20, 0);
+            context.quadraticCurveTo(0, -5 * h, 20, 3 * (1 - h));
+            context.stroke();
+            context.restore();
+            context.save();
+            context.translate(35, browY);
+            context.rotate(browAngle);
+            context.beginPath();
+            context.moveTo(-20, 3 * (1 - h));
+            context.quadraticCurveTo(0, -5 * h, 20, 0);
+            context.stroke();
+            context.restore();
+        }
+
+        function drawForehead(context, tension) {
+            const h = tension / 100;
+            const wrinkleCount = Math.floor((1 - h) * 4);
+            if (wrinkleCount > 0) {
+                context.strokeStyle = `rgba(80, 60, 50, ${(1 - h) * 0.3})`;
+                context.lineWidth = 1;
+                for (let i = 0; i < wrinkleCount; i++) {
+                    const y = -80 + i * 8;
+                    context.beginPath();
+                    context.moveTo(-30, y);
+                    context.quadraticCurveTo(0, y - 3, 30, y);
+                    context.stroke();
+                }
+            }
+        }
+
+        function drawNose(context, skinTone) {
+            const h = skinTone / 100;
+            context.strokeStyle = `rgba(100, 80, 60, ${0.3 + (1 - h) * 0.2})`;
+            context.lineWidth = 2;
+            context.lineCap = 'round';
+            context.beginPath();
+            context.moveTo(0, -15);
+            context.lineTo(0, 25);
+            context.quadraticCurveTo(-8, 30, -12, 28);
+            context.stroke();
+            context.fillStyle = `rgba(255, 255, 255, ${0.1 + h * 0.1})`;
+            context.beginPath();
+            context.arc(0, 22, 4, 0, Math.PI * 2);
+            context.fill();
+        }
+
+        function drawMouth(context, shape, jawTension) {
+            const h = shape / 100;
+            const mouthY = 60;
+            context.lineCap = 'round';
+            context.lineJoin = 'round';
+            if (h < 0.25) {
+                context.strokeStyle = '#8a6050';
+                context.lineWidth = 3;
+                context.beginPath();
+                context.moveTo(-25, mouthY);
+                context.lineTo(25, mouthY);
+                context.stroke();
+                context.lineWidth = 2;
+                context.beginPath();
+                context.moveTo(-25, mouthY);
+                context.quadraticCurveTo(-30, mouthY + 5, -28, mouthY + 8);
+                context.stroke();
+                context.beginPath();
+                context.moveTo(25, mouthY);
+                context.quadraticCurveTo(30, mouthY + 5, 28, mouthY + 8);
+                context.stroke();
+            } else if (h < 0.5) {
+                context.fillStyle = '#5a3a30';
+                context.beginPath();
+                context.ellipse(0, mouthY + 3, 15, 8, 0, 0, Math.PI * 2);
+                context.fill();
+                context.strokeStyle = '#9a6a5a';
+                context.lineWidth = 2;
+                context.beginPath();
+                context.moveTo(-20, mouthY);
+                context.quadraticCurveTo(0, mouthY - 5, 20, mouthY);
+                context.stroke();
+                context.beginPath();
+                context.moveTo(-20, mouthY);
+                context.quadraticCurveTo(0, mouthY + 15, 20, mouthY);
+                context.stroke();
+            } else if (h < 0.75) {
+                context.strokeStyle = '#9a6a5a';
+                context.lineWidth = 3;
+                context.beginPath();
+                context.moveTo(-25, mouthY);
+                context.quadraticCurveTo(0, mouthY + 15, 25, mouthY);
+                context.stroke();
+                context.lineWidth = 1.5;
+                context.strokeStyle = 'rgba(100, 70, 60, 0.4)';
+                context.beginPath();
+                context.arc(-30, mouthY - 5, 8, 0.5, 1.5);
+                context.stroke();
+                context.beginPath();
+                context.arc(30, mouthY - 5, 8, 1.6, 2.6);
+                context.stroke();
+            } else {
+                context.fillStyle = '#5a3a30';
+                context.beginPath();
+                context.moveTo(-30, mouthY);
+                context.quadraticCurveTo(0, mouthY + 30, 30, mouthY);
+                context.quadraticCurveTo(0, mouthY + 10, -30, mouthY);
+                context.fill();
+                context.fillStyle = '#f5f5f0';
+                context.beginPath();
+                context.moveTo(-20, mouthY + 3);
+                context.quadraticCurveTo(0, mouthY + 15, 20, mouthY + 3);
+                context.lineTo(20, mouthY + 8);
+                context.quadraticCurveTo(0, mouthY + 18, -20, mouthY + 8);
+                context.fill();
+                context.strokeStyle = '#9a6a5a';
+                context.lineWidth = 2;
+                context.beginPath();
+                context.moveTo(-30, mouthY);
+                context.quadraticCurveTo(-15, mouthY - 3, 0, mouthY - 5);
+                context.quadraticCurveTo(15, mouthY - 3, 30, mouthY);
+                context.stroke();
+                context.strokeStyle = 'rgba(100, 70, 60, 0.5)';
+                context.lineWidth = 2;
+                context.beginPath();
+                context.arc(-35, mouthY - 5, 10, 0.3, 1.3);
+                context.stroke();
+                context.beginPath();
+                context.arc(35, mouthY - 5, 10, 1.8, 2.8);
+                context.stroke();
+            }
+        }
+
+        function drawJaw(context, tension) {
+            const h = tension / 100;
+            const jawDefinition = (1 - h);
+            if (jawDefinition > 0.3) {
+                context.strokeStyle = `rgba(150, 120, 100, ${jawDefinition * 0.3})`;
+                context.lineWidth = 2;
+                context.beginPath();
+                context.moveTo(-70, 30);
+                context.quadraticCurveTo(-60, 80, -40, 100);
+                context.stroke();
+                context.beginPath();
+                context.moveTo(70, 30);
+                context.quadraticCurveTo(60, 80, 40, 100);
+                context.stroke();
+                if (jawDefinition > 0.6) {
+                    context.beginPath();
+                    context.moveTo(0, 100);
+                    context.lineTo(0, 115);
+                    context.stroke();
+                }
+            }
+        }
+
+        function animate() {
+            frame++;
+            if (!showFinale && currentPhase !== 'intro') {
+                drawFace();
+            }
+            requestAnimationFrame(animate);
+        }
+
+        init();
+        animate();
+    </script>
+</body>
+
+</html>

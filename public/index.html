@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cermin Jiwa</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+            color: #e8e8e8;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px);
+            padding: 35px;
+            border-radius: 24px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            margin-bottom: 8px;
+            color: #ffd369;
+        }
+
+        .question-text {
+            margin-bottom: 30px;
+            color: #ccc;
+            line-height: 1.6;
+            font-size: 1.05rem;
+        }
+
+        /* Countdown Timer */
+        .countdown-display {
+            margin-bottom: 20px;
+        }
+
+        .countdown-timer {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #ffd369;
+            margin: 10px 0;
+        }
+
+        .countdown-timer.warning {
+            color: #e74c3c;
+            animation: pulse 0.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .countdown-label {
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        /* Slider Styles */
+        .slider-container {
+            margin: 25px 0;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 10px;
+        }
+
+        input[type=range] {
+            width: 100%;
+            -webkit-appearance: none;
+            background: transparent;
+            margin: 15px 0;
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 28px;
+            width: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffd369, #e6a800);
+            cursor: pointer;
+            margin-top: -12px;
+            box-shadow: 0 4px 15px rgba(255, 211, 105, 0.4);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        input[type=range]:disabled::-webkit-slider-thumb {
+            background: #555;
+            cursor: not-allowed;
+        }
+
+        /* Multiple Choice Styles */
+        .mc-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin: 20px 0;
+        }
+
+        .mc-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            padding: 15px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: left;
+            font-size: 0.95rem;
+            color: #ddd;
+        }
+
+        .mc-option:hover:not(.disabled) {
+            background: rgba(255, 211, 105, 0.1);
+            border-color: rgba(255, 211, 105, 0.4);
+        }
+
+        .mc-option.selected {
+            background: rgba(255, 211, 105, 0.2);
+            border-color: #ffd369;
+            color: #fff;
+        }
+
+        .mc-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .mc-option .option-label {
+            font-weight: bold;
+            color: #ffd369;
+            margin-right: 8px;
+        }
+
+        /* Button */
+        button {
+            background: linear-gradient(135deg, #ffd369, #e6a800);
+            color: #1a1a2e;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(255, 211, 105, 0.4);
+        }
+
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Waiting screens */
+        .waiting-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .loader {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-top: 4px solid #ffd369;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1.5s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .waiting-content h2 {
+            color: #ffd369;
+            margin-bottom: 10px;
+        }
+
+        .waiting-content p {
+            color: #888;
+        }
+
+        /* Final screen */
+        #final-screen h2 {
+            color: #ffd369;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        #final-screen p {
+            color: #aaa;
+            line-height: 1.6;
+        }
+
+        /* Phase indicator */
+        .phase-badge {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .phase-badge.waiting {
+            background: rgba(150, 150, 150, 0.3);
+            color: #999;
+        }
+
+        .phase-badge.countdown {
+            background: rgba(74, 222, 128, 0.2);
+            color: #4ade80;
+        }
+
+        .phase-badge.results {
+            background: rgba(255, 211, 105, 0.2);
+            color: #ffd369;
+        }
+
+        /* Intro Screen */
+        #intro-screen .intro-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #intro-screen .intro-icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        #intro-screen h2 {
+            color: #ffd369;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        #intro-screen .intro-subtitle {
+            color: #aaa;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        #intro-screen .intro-divider {
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ffd369, transparent);
+            margin-bottom: 20px;
+        }
+
+        #intro-screen .intro-description {
+            color: #ccc;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        #intro-screen .intro-waiting {
+            color: #888;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Question Container -->
+    <div class="container" id="question-container">
+        <span class="phase-badge" id="phase-badge">Menunggu</span>
+        <h1 id="question-title">Pertanyaan 1</h1>
+        <p class="question-text" id="question-text">Loading...</p>
+
+        <!-- Countdown Timer -->
+        <div class="countdown-display" id="countdown-display">
+            <p class="countdown-label">Waktu tersisa</p>
+            <div class="countdown-timer" id="countdown-timer">30</div>
+        </div>
+
+        <!-- Slider Input -->
+        <div id="slider-input" class="slider-container">
+            <div class="slider-labels">
+                <span id="label-left">Sangat Berat</span>
+                <span id="label-right">Sangat Ringan</span>
+            </div>
+            <input type="range" id="answer-slider" min="0" max="100" value="50">
+        </div>
+
+        <!-- Multiple Choice Input -->
+        <div id="mc-input" class="mc-container hidden">
+        </div>
+
+        <button id="submit-btn" onclick="submitAnswer()">Kirim Jawaban</button>
+    </div>
+
+    <!-- Waiting for Host to Start -->
+    <div class="container hidden" id="waiting-start-screen">
+        <div class="waiting-content">
+            <span class="phase-badge waiting">Menunggu</span>
+            <h2>Pertanyaan <span id="waiting-q-num">1</span></h2>
+            <p id="waiting-q-feature">Rona Dasar</p>
+            <div class="loader"></div>
+            <p>Menunggu host memulai pertanyaan...</p>
+        </div>
+    </div>
+
+    <!-- Answer Submitted -->
+    <div class="container hidden" id="submitted-screen">
+        <div class="waiting-content">
+            <span class="phase-badge countdown">Terkirim</span>
+            <h2>Jawaban Terkirim!</h2>
+            <p>Menunggu waktu habis...</p>
+            <div class="countdown-display">
+                <div class="countdown-timer" id="submitted-timer">30</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div class="container hidden" id="results-screen">
+        <div class="waiting-content">
+            <span class="phase-badge results">Hasil</span>
+            <h2>Waktu Habis!</h2>
+            <p>Menunggu host melanjutkan ke pertanyaan berikutnya...</p>
+        </div>
+    </div>
+
+    <!-- Intro Screen (waiting for host to start session) -->
+    <div class="container hidden" id="intro-screen">
+        <div class="intro-content">
+            <div class="intro-icon">🪞</div>
+            <h2>Cermin Jiwa Kolektif</h2>
+            <p class="intro-subtitle">Refleksi Bersama untuk CoLearners</p>
+            <div class="intro-divider"></div>
+            <p class="intro-description">Selamat datang di sesi refleksi kolektif. Melalui 10 pertanyaan, kita akan bersama-sama melukis wajah jiwa kolektif yang merepresentasikan kondisi pikiran dan hati kita semua.</p>
+            <div class="loader"></div>
+            <p class="intro-waiting">Menunggu host memulai sesi...</p>
+        </div>
+    </div>
+
+    <!-- Final Screen -->
+    <div class="container hidden" id="final-screen">
+        <h2>Sesi Selesai</h2>
+        <p>Terima kasih telah berpartisipasi dalam refleksi kolektif ini. Lihatlah ke layar utama untuk menyaksikan wajah jiwa kolektif kita.</p>
+    </div>
+
+    <div class="status" id="connection-status">Connecting...</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase Config
+        const SUPABASE_URL = 'https://uxyojsfbpvugnudbhwhb.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4eW9qc2ZicHZ1Z251ZGJod2hiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4OTI0NjgsImV4cCI6MjA4NDQ2ODQ2OH0.p8uP0jHpEvsblAR--oSST5rSAXkhM3-MgRvQTsxv_r0';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentQuestionIndex = 0;
+        let currentPhase = 'waiting';
+        let countdownEndTime = null;
+        let countdownInterval = null;
+        let hasAnswered = false;
+        let selectedMCValue = null;
+
+        const questions = [
+            {
+                type: 'slider',
+                text: 'Seberapa berat rasanya untuk sekadar "hadir" hari ini?',
+                labelLeft: 'Sangat Berat',
+                labelRight: 'Sangat Ringan',
+                feature: 'Rona Dasar'
+            },
+            {
+                type: 'mc',
+                text: 'Jika batin Anda punya mata, ke mana ia sedang memandang saat ini?',
+                options: [
+                    { label: 'A', text: 'Menatap kosong ke bawah (Hampa)', value: 0 },
+                    { label: 'B', text: 'Menatap lurus ke depan (Waspada)', value: 50 },
+                    { label: 'C', text: 'Menatap tajam ke atas (Mencari Harapan)', value: 100 }
+                ],
+                feature: 'Arah Mata'
+            },
+            {
+                type: 'slider',
+                text: 'Seberapa kusut benang pikiran di kepala Anda?',
+                labelLeft: 'Sangat Kusut/Tegang',
+                labelRight: 'Sangat Terurai/Rileks',
+                feature: 'Kerutan Dahi'
+            },
+            {
+                type: 'mc',
+                text: 'Bayangkan ada beban tak kasat mata di pundak Anda. Seberapa besar ukurannya?',
+                options: [
+                    { label: 'A', text: 'Sebongkah batu besar (Menunduk)', value: 0 },
+                    { label: 'B', text: 'Sekarung beras (Tegak tapi kaku)', value: 50 },
+                    { label: 'C', text: 'Sehelai kapas (Tegak dan rileks)', value: 100 }
+                ],
+                feature: 'Beban Pundak'
+            },
+            {
+                type: 'slider',
+                text: 'Adakah api kecil yang masih menyala di dalam dada Anda?',
+                labelLeft: 'Nyaris Padam',
+                labelRight: 'Menyala Terang',
+                feature: 'Sorot Mata'
+            },
+            {
+                type: 'slider',
+                text: 'Seberapa jujur Anda telah berdamai dengan kelelahan diri sendiri?',
+                labelLeft: 'Masih Menyangkal',
+                labelRight: 'Sudah Menerima',
+                feature: 'Garis Waktu'
+            },
+            {
+                type: 'mc',
+                text: 'Jika diminta merespons hidup saat ini dengan satu ekspresi mulut, mana yang Anda pilih?',
+                options: [
+                    { label: 'A', text: 'Terkatup rapat menahan getir', value: 0 },
+                    { label: 'B', text: 'Sedikit terbuka, menghela napas', value: 33 },
+                    { label: 'C', text: 'Tersenyum simpul yang tabah', value: 67 },
+                    { label: 'D', text: 'Tertawa lebar menantang dunia', value: 100 }
+                ],
+                feature: 'Bentuk Mulut'
+            },
+            {
+                type: 'slider',
+                text: 'Seberapa keras Anda menggigit kenyataan pahit akhir-akhir ini?',
+                labelLeft: 'Sangat Keras',
+                labelRight: 'Lunak',
+                feature: 'Ketegangan Rahang'
+            },
+            {
+                type: 'slider',
+                text: 'Seberapa lega ruang di dada Anda untuk bernafas sekarang?',
+                labelLeft: 'Sesak/Dangkal',
+                labelRight: 'Lega/Dalam',
+                feature: 'Kedalaman Nafas'
+            },
+            {
+                type: 'mc',
+                text: 'Menatap hari esok, bagaimana posisi kepala Anda?',
+                options: [
+                    { label: 'A', text: 'Tertunduk pasrah', value: 0 },
+                    { label: 'B', text: 'Tegak waspada', value: 50 },
+                    { label: 'C', text: 'Mendongak berani', value: 100 }
+                ],
+                feature: 'Sikap Dagu'
+            }
+        ];
+
+        // Initialize
+        async function init() {
+            document.getElementById('connection-status').innerText = 'Connected';
+            document.getElementById('connection-status').style.color = '#4ade80';
+
+            const { data, error } = await supabaseClient
+                .from('game_state')
+                .select('current_question_index, phase, countdown_end_time')
+                .eq('id', 1)
+                .single();
+
+            if (data) {
+                currentQuestionIndex = data.current_question_index;
+                currentPhase = data.phase || 'waiting';
+                countdownEndTime = data.countdown_end_time ? new Date(data.countdown_end_time) : null;
+
+                if (currentPhase === 'countdown' && countdownEndTime) {
+                    startLocalCountdown();
+                }
+
+                updateUI();
+            }
+
+            supabaseClient
+                .channel('game_state_channel')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'game_state' }, payload => {
+                    const newData = payload.new;
+                    const questionChanged = newData.current_question_index !== currentQuestionIndex;
+
+                    currentQuestionIndex = newData.current_question_index;
+                    currentPhase = newData.phase || 'waiting';
+                    countdownEndTime = newData.countdown_end_time ? new Date(newData.countdown_end_time) : null;
+
+                    if (questionChanged) {
+                        hasAnswered = false;
+                        selectedMCValue = null;
+                    }
+
+                    if (currentPhase === 'countdown' && countdownEndTime) {
+                        startLocalCountdown();
+                    } else {
+                        clearInterval(countdownInterval);
+                    }
+
+                    updateUI();
+                })
+                .subscribe();
+        }
+
+        function startLocalCountdown() {
+            clearInterval(countdownInterval);
+
+            countdownInterval = setInterval(() => {
+                const now = new Date();
+                const remaining = Math.max(0, Math.ceil((countdownEndTime - now) / 1000));
+
+                // Update all timer displays
+                document.getElementById('countdown-timer').innerText = remaining;
+                document.getElementById('submitted-timer').innerText = remaining;
+
+                // Warning state
+                const timers = document.querySelectorAll('.countdown-timer');
+                timers.forEach(t => {
+                    if (remaining <= 10) {
+                        t.classList.add('warning');
+                    } else {
+                        t.classList.remove('warning');
+                    }
+                });
+
+                if (remaining <= 0) {
+                    clearInterval(countdownInterval);
+                }
+            }, 100);
+        }
+
+        function hideAllScreens() {
+            document.getElementById('intro-screen').classList.add('hidden');
+            document.getElementById('question-container').classList.add('hidden');
+            document.getElementById('waiting-start-screen').classList.add('hidden');
+            document.getElementById('submitted-screen').classList.add('hidden');
+            document.getElementById('results-screen').classList.add('hidden');
+            document.getElementById('final-screen').classList.add('hidden');
+        }
+
+        function updateUI() {
+            hideAllScreens();
+
+            // Check if session ended
+            if (currentQuestionIndex >= questions.length) {
+                document.getElementById('final-screen').classList.remove('hidden');
+                return;
+            }
+
+            const q = questions[currentQuestionIndex];
+
+            // Update question content
+            document.getElementById('question-title').innerText = `Pertanyaan ${currentQuestionIndex + 1}: ${q.feature}`;
+            document.getElementById('question-text').innerText = q.text;
+            document.getElementById('waiting-q-num').innerText = currentQuestionIndex + 1;
+            document.getElementById('waiting-q-feature').innerText = q.feature;
+
+            // Setup input type
+            if (q.type === 'slider') {
+                document.getElementById('slider-input').classList.remove('hidden');
+                document.getElementById('mc-input').classList.add('hidden');
+                document.getElementById('label-left').innerText = q.labelLeft;
+                document.getElementById('label-right').innerText = q.labelRight;
+                document.getElementById('answer-slider').value = 50;
+            } else {
+                document.getElementById('slider-input').classList.add('hidden');
+                document.getElementById('mc-input').classList.remove('hidden');
+                renderMCOptions(q.options, currentPhase === 'countdown' && !hasAnswered);
+            }
+
+            // Show appropriate screen based on phase and answer state
+            switch (currentPhase) {
+                case 'intro':
+                    document.getElementById('intro-screen').classList.remove('hidden');
+                    break;
+
+                case 'waiting':
+                    document.getElementById('waiting-start-screen').classList.remove('hidden');
+                    break;
+
+                case 'countdown':
+                    if (hasAnswered) {
+                        document.getElementById('submitted-screen').classList.remove('hidden');
+                    } else {
+                        document.getElementById('question-container').classList.remove('hidden');
+                        updatePhaseBadge('countdown');
+                        enableInputs(true);
+                    }
+                    break;
+
+                case 'results':
+                    if (hasAnswered) {
+                        document.getElementById('results-screen').classList.remove('hidden');
+                    } else {
+                        // Didn't answer in time
+                        document.getElementById('results-screen').classList.remove('hidden');
+                    }
+                    break;
+            }
+        }
+
+        function updatePhaseBadge(phase) {
+            const badge = document.getElementById('phase-badge');
+            badge.className = 'phase-badge ' + phase;
+
+            switch (phase) {
+                case 'waiting':
+                    badge.innerText = 'Menunggu';
+                    break;
+                case 'countdown':
+                    badge.innerText = 'Voting Aktif';
+                    break;
+                case 'results':
+                    badge.innerText = 'Hasil';
+                    break;
+            }
+        }
+
+        function enableInputs(enabled) {
+            document.getElementById('answer-slider').disabled = !enabled;
+            document.getElementById('submit-btn').disabled = !enabled;
+
+            document.querySelectorAll('.mc-option').forEach(opt => {
+                if (enabled) {
+                    opt.classList.remove('disabled');
+                } else {
+                    opt.classList.add('disabled');
+                }
+            });
+        }
+
+        function renderMCOptions(options, enabled) {
+            const container = document.getElementById('mc-input');
+            container.innerHTML = '';
+            selectedMCValue = null;
+
+            options.forEach((opt) => {
+                const div = document.createElement('div');
+                div.className = 'mc-option' + (enabled ? '' : ' disabled');
+                div.innerHTML = `<span class="option-label">${opt.label}.</span> ${opt.text}`;
+                if (enabled) {
+                    div.onclick = () => selectMCOption(div, opt.value);
+                }
+                container.appendChild(div);
+            });
+        }
+
+        function selectMCOption(element, value) {
+            if (hasAnswered || currentPhase !== 'countdown') return;
+
+            document.querySelectorAll('.mc-option').forEach(el => el.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedMCValue = value;
+        }
+
+        async function submitAnswer() {
+            if (hasAnswered || currentPhase !== 'countdown') return;
+
+            const q = questions[currentQuestionIndex];
+            let value;
+
+            if (q.type === 'slider') {
+                value = parseInt(document.getElementById('answer-slider').value);
+            } else {
+                if (selectedMCValue === null) {
+                    alert('Silakan pilih salah satu opsi.');
+                    return;
+                }
+                value = selectedMCValue;
+            }
+
+            hasAnswered = true;
+            updateUI();
+
+            const { error } = await supabaseClient
+                .from('answers')
+                .insert([{ question_index: currentQuestionIndex, value: value }]);
+
+            if (error) {
+                console.error('Error submitting:', error);
+                alert('Gagal mengirim jawaban. Coba lagi.');
+                hasAnswered = false;
+                updateUI();
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
